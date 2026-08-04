@@ -349,6 +349,18 @@ type Trade struct {
 	OriginalID    ID        `json:"original_trade_id"`
 }
 
+// TradeInfoResource holds average market price data for a single resource.
+type TradeInfoResource struct {
+	Resource     string  `json:"resource"`
+	AveragePrice float64 `json:"average_price"`
+}
+
+// TopTradeInfo is the market summary returned by the top_trade_info query.
+type TopTradeInfo struct {
+	MarketIndex float64             `json:"market_index"`
+	Resources   []TradeInfoResource `json:"resources"`
+}
+
 // Tradeprice represents the current market price for a resource.
 type Tradeprice struct {
 	ID        ID      `json:"id"`

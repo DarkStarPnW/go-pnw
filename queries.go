@@ -391,6 +391,24 @@ func (c *Client) Tradeprices(ctx context.Context, fields ...string) (*Tradeprice
 	return &out.Tradeprices, nil
 }
 
+// TopTradeInfo returns the market summary, including the average price of each resource.
+func (c *Client) TopTradeInfo(ctx context.Context) (*TopTradeInfo, error) {
+	q := `query {
+		top_trade_info {
+			market_index
+			resources { resource average_price }
+		}
+	}`
+
+	var out struct {
+		TopTradeInfo TopTradeInfo `json:"top_trade_info"`
+	}
+	if err := c.do(ctx, q, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out.TopTradeInfo, nil
+}
+
 // Treasures returns all active treasures.
 func (c *Client) Treasures(ctx context.Context, fields ...string) ([]Treasure, error) {
 	if len(fields) == 0 {
