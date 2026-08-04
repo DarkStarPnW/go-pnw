@@ -1,6 +1,9 @@
 // Package pnw provides a client for the Politics and War GraphQL API (v3).
 // API endpoint: https://api.politicsandwar.com/graphql
 // Get your API key at: https://politicsandwar.com/account/
+//
+// The game also runs a test server with separate nations, alliances, and API
+// keys. Use WithTestAPI to point a client at it.
 package pnw
 
 import (
@@ -13,7 +16,12 @@ import (
 	"time"
 )
 
-const defaultEndpoint = "https://api.politicsandwar.com/graphql"
+// API endpoints. The test server mirrors the production API but runs against
+// separate game data, so keys are not interchangeable between them.
+const (
+	ProdEndpoint = "https://api.politicsandwar.com/graphql"
+	TestEndpoint = "https://api-test.politicsandwar.com/graphql"
+)
 
 // Client is the Politics and War API client.
 type Client struct {
@@ -37,16 +45,35 @@ func WithBotKey(key string) Option {
 	return func(c *Client) { c.botKey = key }
 }
 
-// WithEndpoint overrides the default API endpoint.
+// WithEndpoint overrides the API endpoint. Prefer WithTestAPI or WithAPI for
+// the two hosted environments.
 func WithEndpoint(url string) Option {
 	return func(c *Client) { c.endpoint = url }
+}
+
+// WithTestAPI points the client at the Politics and War test server. The API
+// key must be one issued by the test server.
+func WithTestAPI() Option {
+	return func(c *Client) { c.endpoint = TestEndpoint }
+}
+
+// WithAPI selects an environment by flag, for callers that decide at runtime.
+// Passing true is equivalent to WithTestAPI; false keeps production.
+func WithAPI(test bool) Option {
+	return func(c *Client) {
+		if test {
+			c.endpoint = TestEndpoint
+			return
+		}
+		c.endpoint = ProdEndpoint
+	}
 }
 
 // NewClient creates a new API client using the given API key.
 func NewClient(apiKey string, opts ...Option) *Client {
 	c := &Client{
 		apiKey:   apiKey,
-		endpoint: defaultEndpoint,
+		endpoint: ProdEndpoint,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
