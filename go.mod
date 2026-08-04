@@ -1,4 +1,4 @@
-module github.com/Jonhasacat/go-pnw
+module github.com/DarkStarPnW/go-pnw
 
 go 1.26.4
 

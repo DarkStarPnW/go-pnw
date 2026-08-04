@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	pnw "github.com/Jonhasacat/go-pnw"
+	pnw "github.com/DarkStarPnW/go-pnw"
 )
 
 // apiKey loads PNW_API_KEY from .env or the environment.
