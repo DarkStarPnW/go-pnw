@@ -18,6 +18,7 @@ const defaultEndpoint = "https://api.politicsandwar.com/graphql"
 // Client is the Politics and War API client.
 type Client struct {
 	apiKey     string
+	botKey     string
 	endpoint   string
 	httpClient *http.Client
 }
@@ -28,6 +29,12 @@ type Option func(*Client)
 // WithHTTPClient sets a custom HTTP client.
 func WithHTTPClient(hc *http.Client) Option {
 	return func(c *Client) { c.httpClient = hc }
+}
+
+// WithBotKey sets the verified bot key required by mutations such as
+// BankWithdraw and BankDeposit. Queries do not need it.
+func WithBotKey(key string) Option {
+	return func(c *Client) { c.botKey = key }
 }
 
 // WithEndpoint overrides the default API endpoint.
@@ -83,6 +90,11 @@ func (c *Client) do(ctx context.Context, query string, variables map[string]any,
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	// Mutations are authenticated by the bot key pair rather than the query string.
+	if c.botKey != "" {
+		req.Header.Set("X-Bot-Key", c.botKey)
+		req.Header.Set("X-Api-Key", c.apiKey)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
