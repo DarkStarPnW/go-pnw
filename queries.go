@@ -577,7 +577,7 @@ var defaultTradeFields = []string{
 }
 
 var defaultTradepriceFiels = []string{
-	"id", "date",
+	"id", "date", "tax_id",
 	"coal", "oil", "uranium", "iron", "bauxite", "lead",
 	"gasoline", "munitions", "steel", "aluminum", "food", "credits",
 }
@@ -608,7 +608,7 @@ var defaultWarAttackFields = []string{
 }
 
 var defaultBankRecFields = []string{
-	"id", "date",
+	"id", "date", "tax_id",
 	"eid", "etype", "sid", "stype", "rid", "rtype",
 	"note",
 	"money", "coal", "oil", "uranium", "iron", "bauxite", "lead",

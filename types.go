@@ -411,8 +411,10 @@ type Bounty struct {
 // ----------------------------------------------------------------------------
 
 type BankRec struct {
-	ID           ID      `json:"id"`
-	Date         string  `json:"date"`
+	ID   ID     `json:"id"`
+	Date string `json:"date"`
+	// TaxID is non-zero when the record is an automatic tax collection.
+	TaxID        ID      `json:"tax_id"`
 	EnteringID   ID      `json:"eid"`
 	EnteringType int     `json:"etype"`
 	SenderID     ID      `json:"sid"`
