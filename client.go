@@ -10,9 +10,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -84,6 +86,22 @@ func NewClient(apiKey string, opts ...Option) *Client {
 	return c
 }
 
+// redact strips credentials from an error message. Transport errors embed the
+// request URL, which carries the API key as a query parameter, and those errors
+// often end up in logs or user-facing messages.
+func (c *Client) redact(err error) error {
+	if err == nil {
+		return nil
+	}
+	msg := err.Error()
+	for _, secret := range []string{c.apiKey, c.botKey} {
+		if secret != "" {
+			msg = strings.ReplaceAll(msg, secret, "[redacted]")
+		}
+	}
+	return errors.New(msg)
+}
+
 type graphQLRequest struct {
 	Query     string         `json:"query"`
 	Variables map[string]any `json:"variables,omitempty"`
@@ -113,7 +131,7 @@ func (c *Client) do(ctx context.Context, query string, variables map[string]any,
 	url := c.endpoint + "?api_key=" + c.apiKey
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("pnw: build request: %w", err)
+		return fmt.Errorf("pnw: build request: %w", c.redact(err))
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -125,7 +143,7 @@ func (c *Client) do(ctx context.Context, query string, variables map[string]any,
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("pnw: http: %w", err)
+		return fmt.Errorf("pnw: http: %w", c.redact(err))
 	}
 	defer resp.Body.Close()
 
