@@ -128,17 +128,18 @@ func (c *Client) do(ctx context.Context, query string, variables map[string]any,
 		return fmt.Errorf("pnw: marshal request: %w", err)
 	}
 
-	url := c.endpoint + "?api_key=" + c.apiKey
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	// The key goes in a header rather than the query string: URLs turn up in
+	// transport errors, proxy logs, and traces.
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("pnw: build request: %w", c.redact(err))
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	// Mutations are authenticated by the bot key pair rather than the query string.
+	req.Header.Set("X-Api-Key", c.apiKey)
+	// Mutations additionally need the verified bot key.
 	if c.botKey != "" {
 		req.Header.Set("X-Bot-Key", c.botKey)
-		req.Header.Set("X-Api-Key", c.apiKey)
 	}
 
 	resp, err := c.httpClient.Do(req)
