@@ -95,6 +95,10 @@ type PaginatorInfo struct {
 // ----------------------------------------------------------------------------
 
 type Nation struct {
+	// Discord is the username set on the nation's account page; DiscordID is the
+	// numeric account ID when the player has linked their account.
+	Discord          string           `json:"discord"`
+	DiscordID        string           `json:"discord_id"`
 	ID               ID               `json:"id"`
 	AllianceID       ID               `json:"alliance_id"`
 	AlliancePosition AlliancePosition `json:"alliance_position"`
