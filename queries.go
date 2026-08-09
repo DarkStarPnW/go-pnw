@@ -102,12 +102,6 @@ func (f WarFilter) toVars() map[string]any {
 	if len(f.ID) > 0 {
 		v["id"] = f.ID
 	}
-	if len(f.NationID) > 0 {
-		v["nation_id"] = f.NationID
-	}
-	if len(f.AllianceID) > 0 {
-		v["alliance_id"] = f.AllianceID
-	}
 	if f.Active != nil {
 		v["active"] = *f.Active
 	}
@@ -213,15 +207,16 @@ func (f WarAttackFilter) toVars() map[string]any {
 	return v
 }
 
-// BankRecFilter filters bankrecs / taxrecs queries.
+// BankRecFilter filters the bankrecs query. The API filters by the parties on
+// the record rather than by nation or alliance, so use SenderID / ReceiverID.
 type BankRecFilter struct {
 	ID         []int
 	SenderID   []int
 	ReceiverID []int
-	NationID   []int
-	AllianceID []int
-	First      int
-	Page       int
+	// MinID returns only records newer than this ID.
+	MinID int
+	First int
+	Page  int
 }
 
 func (f BankRecFilter) toVars() map[string]any {
@@ -235,11 +230,8 @@ func (f BankRecFilter) toVars() map[string]any {
 	if len(f.ReceiverID) > 0 {
 		v["rid"] = f.ReceiverID
 	}
-	if len(f.NationID) > 0 {
-		v["nation_id"] = f.NationID
-	}
-	if len(f.AllianceID) > 0 {
-		v["alliance_id"] = f.AllianceID
+	if f.MinID > 0 {
+		v["min_id"] = f.MinID
 	}
 	if f.First > 0 {
 		v["first"] = f.First
@@ -497,6 +489,12 @@ func (c *Client) WarAttacks(ctx context.Context, filter WarAttackFilter, fields 
 	return out.WarAttacks, nil
 }
 
+// BankRecPaginator wraps paginated BankRec results.
+type BankRecPaginator struct {
+	PaginatorInfo PaginatorInfo `json:"paginatorInfo"`
+	Data          []BankRec     `json:"data"`
+}
+
 // BankRecs returns bank records matching the filter.
 func (c *Client) BankRecs(ctx context.Context, filter BankRecFilter, fields ...string) ([]BankRec, error) {
 	if len(fields) == 0 {
@@ -504,21 +502,24 @@ func (c *Client) BankRecs(ctx context.Context, filter BankRecFilter, fields ...s
 	}
 	q := `query BankRecs(
 		$id: [Int], $sid: [Int], $rid: [Int],
-		$nation_id: [Int], $alliance_id: [Int], $first: Int, $page: Int
+		$min_id: Int, $first: Int, $page: Int
 	) {
 		bankrecs(
 			id: $id, sid: $sid, rid: $rid,
-			nation_id: $nation_id, alliance_id: $alliance_id, first: $first, page: $page
-		) { ` + joinFields(fields) + ` }
+			min_id: $min_id, first: $first, page: $page
+		) {
+			paginatorInfo { ` + paginatorInfoFields + ` }
+			data { ` + joinFields(fields) + ` }
+		}
 	}`
 
 	var out struct {
-		BankRecs []BankRec `json:"bankrecs"`
+		BankRecs BankRecPaginator `json:"bankrecs"`
 	}
 	if err := c.do(ctx, q, filter.toVars(), &out); err != nil {
 		return nil, err
 	}
-	return out.BankRecs, nil
+	return out.BankRecs.Data, nil
 }
 
 // Query executes a raw GraphQL query and decodes the top-level data into out.
