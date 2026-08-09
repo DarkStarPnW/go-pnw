@@ -489,6 +489,37 @@ func (c *Client) WarAttacks(ctx context.Context, filter WarAttackFilter, fields 
 	return out.WarAttacks, nil
 }
 
+// AllianceTaxrecs returns an alliance's tax records. Taxes are recorded against
+// the alliance that collected them rather than against the paying nation, so
+// they are read here and not from the nation's bank records.
+func (c *Client) AllianceTaxrecs(ctx context.Context, allianceID int, fields ...string) ([]BankRec, error) {
+	if len(fields) == 0 {
+		fields = defaultBankRecFields
+	}
+	q := `query AllianceTaxrecs($id: [Int]) {
+		alliances(id: $id, first: 1) {
+			data {
+				taxrecs { ` + joinFields(fields) + ` }
+			}
+		}
+	}`
+
+	var out struct {
+		Alliances struct {
+			Data []struct {
+				Taxrecs []BankRec `json:"taxrecs"`
+			} `json:"data"`
+		} `json:"alliances"`
+	}
+	if err := c.do(ctx, q, map[string]any{"id": []int{allianceID}}, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Alliances.Data) == 0 {
+		return nil, nil
+	}
+	return out.Alliances.Data[0].Taxrecs, nil
+}
+
 // BankRecPaginator wraps paginated BankRec results.
 type BankRecPaginator struct {
 	PaginatorInfo PaginatorInfo `json:"paginatorInfo"`
