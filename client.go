@@ -128,17 +128,19 @@ func (c *Client) do(ctx context.Context, query string, variables map[string]any,
 		return fmt.Errorf("pnw: marshal request: %w", err)
 	}
 
-	// The key goes in a header rather than the query string: URLs turn up in
-	// transport errors, proxy logs, and traces.
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint, bytes.NewReader(body))
+	// PnW authenticates queries by the api_key query parameter and rejects the
+	// header on its own. Because that puts the key in the URL, and URLs turn up
+	// in transport errors, every error this client returns is redacted.
+	url := c.endpoint + "?api_key=" + c.apiKey
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("pnw: build request: %w", c.redact(err))
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("X-Api-Key", c.apiKey)
-	// Mutations additionally need the verified bot key.
+	// Mutations are additionally authenticated by the bot key pair.
 	if c.botKey != "" {
+		req.Header.Set("X-Api-Key", c.apiKey)
 		req.Header.Set("X-Bot-Key", c.botKey)
 	}
 
