@@ -419,8 +419,6 @@ type BankRec struct {
 	Date string `json:"date"`
 	// TaxID is non-zero when the record is an automatic tax collection.
 	TaxID        ID      `json:"tax_id"`
-	EnteringID   ID      `json:"eid"`
-	EnteringType int     `json:"etype"`
 	SenderID     ID      `json:"sid"`
 	SenderType   int     `json:"stype"`
 	ReceiverID   ID      `json:"rid"`

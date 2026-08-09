@@ -610,7 +610,7 @@ var defaultWarAttackFields = []string{
 
 var defaultBankRecFields = []string{
 	"id", "date", "tax_id",
-	"eid", "etype", "sid", "stype", "rid", "rtype",
+	"sid", "stype", "rid", "rtype",
 	"note",
 	"money", "coal", "oil", "uranium", "iron", "bauxite", "lead",
 	"gasoline", "munitions", "steel", "aluminum", "food",
