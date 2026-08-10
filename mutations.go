@@ -44,7 +44,7 @@ type BankDepositInput struct {
 // Requires a verified bot API key.
 func (c *Client) BankWithdraw(ctx context.Context, input BankWithdrawInput) (*BankRec, error) {
 	q := `mutation BankWithdraw(
-		$receiver: Int!, $receiver_type: Int!, $note: String,
+		$receiver: ID!, $receiver_type: Int!, $note: String,
 		$money: Float, $coal: Float, $oil: Float, $uranium: Float,
 		$iron: Float, $bauxite: Float, $lead: Float, $gasoline: Float,
 		$munitions: Float, $steel: Float, $aluminum: Float, $food: Float
