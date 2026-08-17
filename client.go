@@ -27,8 +27,12 @@ const (
 
 // Client is the Politics and War API client.
 type Client struct {
-	apiKey     string
-	botKey     string
+	apiKey string
+	botKey string
+	// botAPIKey is the API key of the account the bot key was issued to. PnW
+	// only accepts the pair together, and it need not be the key the request is
+	// made with: apiKey selects whose nation or alliance is acted on.
+	botAPIKey  string
 	endpoint   string
 	httpClient *http.Client
 }
@@ -45,6 +49,14 @@ func WithHTTPClient(hc *http.Client) Option {
 // BankWithdraw and BankDeposit. Queries do not need it.
 func WithBotKey(key string) Option {
 	return func(c *Client) { c.botKey = key }
+}
+
+// WithBotAPIKey sets the API key belonging to the account that owns the bot
+// key. Mutations send the two together, so this is required whenever the bot
+// key was issued to a different account than the client's own API key. It
+// defaults to that key.
+func WithBotAPIKey(key string) Option {
+	return func(c *Client) { c.botAPIKey = key }
 }
 
 // WithEndpoint overrides the API endpoint. Prefer WithTestAPI or WithAPI for
@@ -83,6 +95,11 @@ func NewClient(apiKey string, opts ...Option) *Client {
 	for _, o := range opts {
 		o(c)
 	}
+	// One account holding both keys is the common case, so the pair defaults to
+	// this client's own key.
+	if c.botAPIKey == "" {
+		c.botAPIKey = apiKey
+	}
 	return c
 }
 
@@ -94,7 +111,7 @@ func (c *Client) redact(err error) error {
 		return nil
 	}
 	msg := err.Error()
-	for _, secret := range []string{c.apiKey, c.botKey} {
+	for _, secret := range []string{c.apiKey, c.botKey, c.botAPIKey} {
 		if secret != "" {
 			msg = strings.ReplaceAll(msg, secret, "[redacted]")
 		}
@@ -140,7 +157,7 @@ func (c *Client) do(ctx context.Context, query string, variables map[string]any,
 	req.Header.Set("Accept", "application/json")
 	// Mutations are additionally authenticated by the bot key pair.
 	if c.botKey != "" {
-		req.Header.Set("X-Api-Key", c.apiKey)
+		req.Header.Set("X-Api-Key", c.botAPIKey)
 		req.Header.Set("X-Bot-Key", c.botKey)
 	}
 
