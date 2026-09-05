@@ -130,6 +130,10 @@ type Nation struct {
 	// TaxID is the alliance tax bracket the nation is assigned to, or 0 for the
 	// alliance's default bracket.
 	TaxID ID `json:"tax_id"`
+	// AllianceSeniority is how many days the nation has been in its alliance,
+	// and AllianceJoinDate when it joined.
+	AllianceSeniority int    `json:"alliance_seniority"`
+	AllianceJoinDate  string `json:"alliance_join_date"`
 
 	// Resources (only returned when querying your own nation or alliance bank)
 	Money     float64 `json:"money"`
