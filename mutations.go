@@ -133,3 +133,24 @@ func (c *Client) BankDeposit(ctx context.Context, input BankDepositInput) (*Bank
 	}
 	return &out.BankDeposit, nil
 }
+
+// AssignTaxBracket moves a nation into one of its alliance's tax brackets.
+// bracketID is the bracket to assign, nationID the nation to move. Requires a
+// verified bot API key.
+func (c *Client) AssignTaxBracket(ctx context.Context, bracketID, nationID int) (*TaxBracket, error) {
+	q := `mutation AssignTaxBracket($id: Int!, $target_id: Int!) {
+		assignTaxBracket(id: $id, target_id: $target_id) {
+			id alliance_id bracket_name tax_rate resource_tax_rate
+		}
+	}`
+
+	vars := map[string]any{"id": bracketID, "target_id": nationID}
+
+	var out struct {
+		AssignTaxBracket TaxBracket `json:"assignTaxBracket"`
+	}
+	if err := c.do(ctx, q, vars, &out); err != nil {
+		return nil, err
+	}
+	return &out.AssignTaxBracket, nil
+}

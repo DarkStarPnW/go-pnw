@@ -127,6 +127,9 @@ type Nation struct {
 	Espionage        bool             `json:"espionage_available"`
 	LastActive       string           `json:"last_active"`
 	Date             string           `json:"date"`
+	// TaxID is the alliance tax bracket the nation is assigned to, or 0 for the
+	// alliance's default bracket.
+	TaxID ID `json:"tax_id"`
 
 	// Resources (only returned when querying your own nation or alliance bank)
 	Money     float64 `json:"money"`
@@ -447,4 +450,17 @@ type ColorInfo struct {
 	Color     Color  `json:"color"`
 	BloCName  string `json:"bloc_name"`
 	TurnBonus int    `json:"turn_bonus"`
+}
+
+// TaxBracket is one of an alliance's tax brackets. Rates are percentages, and
+// cash and resources are taxed separately.
+type TaxBracket struct {
+	ID              ID     `json:"id"`
+	AllianceID      ID     `json:"alliance_id"`
+	Name            string `json:"bracket_name"`
+	TaxRate         int    `json:"tax_rate"`
+	ResourceTaxRate int    `json:"resource_tax_rate"`
+	Date            string `json:"date"`
+	DateModified    string `json:"date_modified"`
+	LastModifierID  ID     `json:"last_modifier_id"`
 }

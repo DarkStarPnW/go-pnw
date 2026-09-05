@@ -299,6 +299,42 @@ func (c *Client) Alliances(ctx context.Context, filter AllianceFilter, fields ..
 	return &out.Alliances, nil
 }
 
+// defaultTaxBracketFields are the fields returned for a tax bracket when the
+// caller names none.
+var defaultTaxBracketFields = []string{
+	"id", "alliance_id", "bracket_name", "tax_rate", "resource_tax_rate",
+}
+
+// AllianceTaxBrackets returns an alliance's tax brackets. Brackets belong to the
+// alliance, and the API key must belong to it to read them.
+func (c *Client) AllianceTaxBrackets(ctx context.Context, allianceID int, fields ...string) ([]TaxBracket, error) {
+	if len(fields) == 0 {
+		fields = defaultTaxBracketFields
+	}
+	q := `query AllianceTaxBrackets($id: [Int]) {
+		alliances(id: $id, first: 1) {
+			data {
+				tax_brackets { ` + joinFields(fields) + ` }
+			}
+		}
+	}`
+
+	var out struct {
+		Alliances struct {
+			Data []struct {
+				TaxBrackets []TaxBracket `json:"tax_brackets"`
+			} `json:"data"`
+		} `json:"alliances"`
+	}
+	if err := c.do(ctx, q, map[string]any{"id": []int{allianceID}}, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Alliances.Data) == 0 {
+		return nil, nil
+	}
+	return out.Alliances.Data[0].TaxBrackets, nil
+}
+
 // WarPaginator wraps paginated War results.
 type WarPaginator struct {
 	PaginatorInfo PaginatorInfo `json:"paginatorInfo"`
