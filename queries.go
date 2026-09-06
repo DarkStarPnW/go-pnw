@@ -419,12 +419,18 @@ func (c *Client) Tradeprices(ctx context.Context, fields ...string) (*Tradeprice
 	return &out.Tradeprices, nil
 }
 
-// TopTradeInfo returns the market summary, including the average price of each resource.
+// TopTradeInfo returns the market summary: each resource's long-run average
+// price, and the best offer standing on each side of its order book.
 func (c *Client) TopTradeInfo(ctx context.Context) (*TopTradeInfo, error) {
 	q := `query {
 		top_trade_info {
 			market_index
-			resources { resource average_price }
+			resources {
+				resource
+				average_price
+				best_buy_offer { id price offer_amount date }
+				best_sell_offer { id price offer_amount date }
+			}
 		}
 	}`
 

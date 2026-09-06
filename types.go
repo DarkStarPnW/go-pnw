@@ -354,16 +354,26 @@ type Trade struct {
 	OfferResource string    `json:"offer_resource"`
 	OfferAmount   int       `json:"offer_amount"`
 	BuyOrSell     string    `json:"buy_or_sell"`
-	PricePerUnit  int       `json:"price_per_unit"`
-	Accepted      bool      `json:"accepted"`
-	DateAccepted  string    `json:"date_accepted"`
-	OriginalID    ID        `json:"original_trade_id"`
+	// Price is per unit of the resource offered.
+	Price        int    `json:"price"`
+	Accepted     bool   `json:"accepted"`
+	DateAccepted string `json:"date_accepted"`
+	OriginalID   ID     `json:"original_trade_id"`
 }
 
-// TradeInfoResource holds average market price data for a single resource.
+// TradeInfoResource holds the market summary for a single resource: a long-run
+// average price, and the best offer standing on each side of the book right now.
 type TradeInfoResource struct {
-	Resource     string  `json:"resource"`
+	Resource string `json:"resource"`
+	// AveragePrice is an average over the game's history rather than a current
+	// price, and can sit well outside the spread. Value resources against the
+	// offers below unless a historical figure is what is wanted.
 	AveragePrice float64 `json:"average_price"`
+	// BestBuyOffer is the highest a buyer is currently bidding, and
+	// BestSellOffer the lowest a seller is currently asking. Either is nil when
+	// nobody is offering that side.
+	BestBuyOffer  *Trade `json:"best_buy_offer"`
+	BestSellOffer *Trade `json:"best_sell_offer"`
 }
 
 // TopTradeInfo is the market summary returned by the top_trade_info query.
