@@ -531,6 +531,37 @@ func (c *Client) WarAttacks(ctx context.Context, filter WarAttackFilter, fields 
 	return out.WarAttacks, nil
 }
 
+// AllianceBankrecs returns an alliance's bank records: everything paid into or
+// out of its bank, newest last. Records belong to the alliance, so the API key
+// must belong to it.
+func (c *Client) AllianceBankrecs(ctx context.Context, allianceID int, fields ...string) ([]BankRec, error) {
+	if len(fields) == 0 {
+		fields = defaultBankRecFields
+	}
+	q := `query AllianceBankrecs($id: [Int]) {
+		alliances(id: $id, first: 1) {
+			data {
+				bankrecs { ` + joinFields(fields) + ` }
+			}
+		}
+	}`
+
+	var out struct {
+		Alliances struct {
+			Data []struct {
+				Bankrecs []BankRec `json:"bankrecs"`
+			} `json:"data"`
+		} `json:"alliances"`
+	}
+	if err := c.do(ctx, q, map[string]any{"id": []int{allianceID}}, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Alliances.Data) == 0 {
+		return nil, nil
+	}
+	return out.Alliances.Data[0].Bankrecs, nil
+}
+
 // AllianceTaxrecs returns an alliance's tax records. Taxes are recorded against
 // the alliance that collected them rather than against the paying nation, so
 // they are read here and not from the nation's bank records.
